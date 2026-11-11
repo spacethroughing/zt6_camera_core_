@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ZT6 云台控制台</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="brand-icon">⊕</span><div><h1>ZT6 云台控制台</h1><p>可见光 · 热成像 · 相机控制</p></div></div>
+    <div class="top-status"><span id="connection" class="badge">正在连接</span><span class="address">RK3588 / 100.64.0.56</span></div>
+  </header>
+  <main class="layout">
+    <section class="workspace">
+      <div class="section-heading"><h2>实时画面</h2><span id="previewInfo">等待视频流</span></div>
+      <div class="viewer">
+        <img id="liveImage" alt="ZT6 实时视频画面">
+        <div id="videoPlaceholder" class="placeholder"><span>⌖</span><strong>正在等待相机画面</strong><p>视频连接成功后将自动显示</p></div>
+        <div class="viewer-top"><span id="viewLabel" class="viewer-label">主码流</span><span id="recordIndicator" class="rec hidden">● REC</span></div>
+        <div class="reticle" aria-hidden="true"></div>
+        <div class="viewer-bottom"><span>ZT6 <span class="dim">/ LIVE VIEW</span></span><span id="frameStatus">—</span></div>
+      </div>
+      <div class="viewer-toolbar">
+        <div class="segmented" aria-label="画面来源">
+          <button data-source="visible" data-device>可见光</button><button data-source="thermal" data-device>热成像</button><button data-source="pip" data-device>拼接画面</button>
+        </div>
+        <button id="previewToggle" class="subtle">暂停预览</button>
+      </div>
+      <div class="capture panel">
+        <div class="panel-heading"><h2>拍摄与存储</h2><label class="storage-label">保存到 <select id="storage"><option value="onboard">机载电脑</option><option value="sd">云台 SD 卡</option></select></label></div>
+        <div class="setting-row"><label for="photoCount">拍照张数</label><input id="photoCount" type="number" min="1" max="100" step="1" value="1" style="width:90px"><span class="hint">逐张确认，间隔 1 秒</span></div>
+        <div class="capture-actions"><button id="photo" class="primary" data-device>◎ 拍照</button><button id="recordStart" data-device><span class="red-dot"></span> 开始录像</button><button id="recordStop">■ 停止录像</button></div>
+        <p id="storageHint" class="hint">机载照片为视频截帧，视频保存在飞机的文件系统中。</p>
+        <div class="record-states"><span>机载 <b id="onboardRecord">—</b><button id="stopOnboard" class="text-button hidden">停止</button></span><span>SD <b id="sdRecord">—</b><button id="stopSD" class="text-button hidden">停止</button></span></div>
+      </div>
+      <section class="panel files-panel">
+        <div class="panel-heading"><h2>已保存文件</h2><div class="inline"><select id="fileKind" aria-label="文件类型"><option value="photo">照片</option><option value="video">录像</option></select><button id="refreshFiles" class="subtle">刷新列表</button></div></div>
+        <div id="files" class="file-list"><p class="hint">点击“刷新列表”查看当前保存位置的文件。</p></div>
+        <p class="hint">SD 录像状态与文件落盘分开核实。机载与 SD 文件均可直接下载到本机；SD 下载通过飞机转发，不占用机载存储。</p>
+      </section>
+    </section>
+    <aside class="controls">
+      <section class="panel gimbal-panel">
+        <div class="panel-heading"><h2>云台姿态</h2><span id="mounting" class="small-tag">—</span></div>
+        <div class="angles"><div><label>偏航 YAW</label><strong id="yaw">—</strong></div><div><label>俯仰 PITCH</label><strong id="pitch">—</strong></div><div><label>横滚 ROLL</label><strong id="roll">—</strong></div></div>
+        <div class="dpad" aria-label="云台方向控制">
+          <button class="up" data-yaw="0" data-pitch="18" data-device aria-label="云台向上">▲</button>
+          <button class="left" data-yaw="-18" data-pitch="0" data-device aria-label="云台向左">◀</button>
+          <button id="center" class="center" data-device title="一键回中"><span>⊙</span>回中</button>
+          <button class="right" data-yaw="18" data-pitch="0" data-device aria-label="云台向右">▶</button>
+          <button class="down" data-yaw="0" data-pitch="-18" data-device aria-label="云台向下">▼</button>
+        </div>
+        <p class="hint centered">按住方向按钮移动，松开停止。也可使用键盘方向键。</p>
+        <button id="stopMotion" class="stop-motion">停止云台运动 <kbd>Space</kbd></button>
+        <div class="divider"></div>
+        <h3>指定目标角度</h3>
+        <form id="angleForm"><div class="angle-inputs"><label>偏航 / °<input id="targetYaw" type="number" min="-270" max="270" step="0.1" value="0" required></label><label>俯仰 / °<input id="targetPitch" type="number" min="-90" max="25" step="0.1" value="0" required></label></div><button id="applyAngle" class="wide" data-device>转到目标角度</button></form>
+        <p class="hint">偏航 −270°～270°，俯仰 −90°～25°。实时读数采用 SDK 坐标；倒装时可能存在角度偏置，真机方向仍需核验。</p>
+      </section>
+      <section class="panel">
+        <div class="panel-heading"><h2>相机设置</h2></div>
+        <div class="setting-row"><span>开机自动录像</span><select id="autoRecord" aria-label="开机自动录像"><option value="">未查询</option><option value="off">关闭</option><option value="on">开启</option></select></div>
+        <button id="readAuto" class="subtle wide">读取当前设置</button>
+        <p class="hint">手动控制录像时可保持关闭。开启后，相机可能自行向 SD 卡开始录制。</p>
+      </section>
+      <section class="panel" id="sdkSettings">
+        <div class="panel-heading"><h2>相机输出与变倍</h2><button id="readSettings" class="subtle" data-device>读取设置</button></div>
+        <h3>相机编码分辨率</h3>
+        <div class="setting-row"><label for="encodingStream">码流</label><select id="encodingStream" data-setting><option value="main">主码流</option><option value="sub">副码流</option><option value="record">SD 录像流</option></select></div>
+        <p id="encodingCurrent" class="hint">点击“读取设置”获取相机实际编码参数。</p>
+        <form id="resolutionForm">
+          <div class="setting-row"><label for="cameraResolution">目标分辨率</label><select id="cameraResolution" data-setting><option value="1920x1080">1920 × 1080</option><option value="1280x720">1280 × 720</option><option value="2560x1440" data-record-only hidden disabled>2560 × 1440（录像流）</option><option value="3840x2160" data-record-only hidden disabled>3840 × 2160（录像流）</option></select></div>
+          <div class="angle-inputs"><label>编码<select id="cameraCodec" data-setting><option value="">保持当前</option><option value="h264">H.264</option><option value="h265">H.265</option></select></label><label>码率 / Kbps<input id="cameraBitrate" type="number" min="1" max="65535" step="1" placeholder="保持当前" data-setting></label></div>
+          <button id="applyResolution" class="wide" data-device>设置相机编码参数</button>
+        </form>
+        <p class="hint">修改相机输出，不是网页缩放。主/副流设置 720p/1080p，录像流另支持 2K/4K；其他原生尺寸仅查询。应用后视频约需数秒重连，录像时禁止修改。</p>
+        <div class="divider"></div>
+        <form id="modeForm"><div class="setting-row"><label for="gimbalMode">云台模式</label><select id="gimbalMode" required data-setting><option value="">未读取</option><option value="lock">锁定</option><option value="follow">跟随</option><option value="fpv">FPV</option></select></div><button id="applyGimbalMode" class="wide" data-device>应用云台模式</button></form>
+        <div class="divider"></div>
+        <p id="zoomInfo" class="hint">变倍与热像联动暂未启用。</p>
+        <form id="zoomForm"><div class="setting-row"><label for="zoomRatio">数字倍率</label><input id="zoomRatio" type="number" min="1" max="30" step="0.1" value="1" required data-setting style="width:110px"></div><button id="applyZoom" class="wide" data-device>设置倍率</button></form>
+        <div class="setting-row"><label for="zoomLink">热像联动</label><select id="zoomLink" data-setting><option value="">未读取</option><option value="on">开启</option><option value="off">关闭</option></select><button id="applyZoomLink" class="subtle" data-device>应用</button></div>
+        <p class="hint">热像联动用于拼接画面下 1–2 倍同步变倍；相机显示的更高倍率不代表热像也支持。</p>
+        <div class="divider"></div>
+        <div class="setting-row"><label for="thermalOutput">热像输出</label><select id="thermalOutput" data-setting><option value="">未读取</option><option value="video">30 fps 视频</option><option value="temperature">25 fps + 温度帧</option></select></div>
+        <button id="applyThermalOutput" class="subtle wide" data-device>应用热像输出模式</button>
+        <button id="requestTempFrame" class="wide" data-device>请求一次温度帧</button>
+        <p id="thermalFrameInfo" class="hint">单帧请求可独立使用，仅确认相机接受；此处不接收或下载逐像素温度矩阵。</p>
+      </section>
+      <section class="panel activity"><div class="panel-heading"><h2>操作记录</h2><button id="clearLog" class="text-button">清空</button></div><div id="activity" role="log" aria-live="polite"><p class="log-entry">控制台已打开，等待连接。</p></div></section>
+    </aside>
+  </main>
+  <footer><span>C++ 控制核心 · SSH 本地连接</span><span id="footerStatus">等待状态</span></footer>
+  <div id="toast" class="toast hidden" role="status"></div>
+</body>
+</html>

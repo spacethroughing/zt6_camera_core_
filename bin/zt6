@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+# C++ 命令行入口；首次使用请执行 scripts/build.sh。
+# 飞机上的同名入口仍是旧版 Python 版本，本次没有上传覆盖。
+set -eu
+WORKSPACE=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+if [ ! -x "$WORKSPACE/build/zt6" ]; then
+    echo "请先执行：bash $WORKSPACE/scripts/build.sh" >&2
+    exit 2
+fi
+exec "$WORKSPACE/build/zt6" "$@"

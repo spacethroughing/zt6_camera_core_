@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+# C++ Web 服务入口；仅监听本机回环地址。
+set -eu
+WORKSPACE=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+if [ ! -x "$WORKSPACE/build/zt6-web" ]; then
+    echo "请先执行：bash $WORKSPACE/scripts/build.sh" >&2
+    exit 2
+fi
+exec "$WORKSPACE/build/zt6-web" "$@"
